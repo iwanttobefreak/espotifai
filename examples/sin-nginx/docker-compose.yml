@@ -1,0 +1,16 @@
+services:
+  espotifai:
+    build: ../../server
+    image: espotifai-server
+    container_name: espotifai
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8088}:8088"
+    volumes:
+      - "${MUSIC_DIR:-./music}:/music:ro"
+      - "./data:/app/data"
+    environment:
+      MUSIC_DIR: /music
+      PORT: "8088"
+      API_TOKEN: "${API_TOKEN:?Define API_TOKEN en .env}"
+      EXCLUDE_DIRS: "${EXCLUDE_DIRS:-}"

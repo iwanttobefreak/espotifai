@@ -1,0 +1,39 @@
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+**/.env
+!**/.env.example
+
+# Datos de ejecución (índice, usuarios, logs de fallos)
+server/data/*
+!server/data/.gitkeep
+examples/*/data/*
+!examples/*/data/.gitkeep
+*.log
+
+# Ejemplos: música y certificados locales
+examples/*/music/
+examples/con-nginx/certbot/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Android
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+android/keystore.properties
+android/keystore/
+*.jks
+*.keystore
+*.apk
+*.aab
+
+# IDE / sistema
+.idea/
+*.iml
+.DS_Store

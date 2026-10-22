@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Espotifai — Tu música, en tu casa</title>
+<meta name="description" content="Proyecto de streaming de música autoalojado: frontal, documentación, repositorio e instancias personales con app web y Android.">
+<meta name="theme-color" content="#0b0f0d">
+<meta property="og:title" content="Espotifai — Tu música, en tu casa">
+<meta property="og:description" content="Servidor de streaming de música autoalojado, con app Android, descargas offline, cola y listas.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231db954'/%3E%3Cpath d='M26 18l22 14-22 14z' fill='%230b0f0d'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0b0f0d;
+    --bg2:#0e1411;
+    --card:#141b16;
+    --card2:#17201a;
+    --line:#243029;
+    --text:#f2f6f3;
+    --muted:#a7b3ab;
+    --green:#1db954;
+    --green2:#1ed760;
+    --radius:18px;
+    --max:1120px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 500px at 80% -10%, rgba(29,185,84,.13), transparent 60%),
+      radial-gradient(700px 400px at 0% 20%, rgba(29,185,84,.06), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  .muted{color:var(--muted)}
+  .green{color:var(--green2)}
+
+  /* header */
+  header{
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:blur(14px);
+    background:rgba(11,15,13,.72);
+    border-bottom:1px solid rgba(36,48,41,.7);
+  }
+  .nav{display:flex;align-items:center;gap:26px;height:68px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:750;letter-spacing:-.02em;font-size:1.12rem;text-decoration:none}
+  .brand svg{width:30px;height:30px;flex:none}
+  .nav-links{display:flex;gap:22px;margin-left:auto;font-size:.93rem;color:var(--muted)}
+  .nav-links a{text-decoration:none}
+  .nav-links a:hover{color:var(--text)}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    padding:11px 18px;border-radius:999px;font-weight:650;font-size:.93rem;
+    text-decoration:none;border:1px solid transparent;transition:transform .15s ease, background .15s ease, border-color .15s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn-primary{background:var(--green);color:#04140a}
+  .btn-primary:hover{background:var(--green2)}
+  .btn-ghost{border-color:var(--line);color:var(--text);background:rgba(255,255,255,.02)}
+  .btn-ghost:hover{border-color:#3a4a40;background:rgba(255,255,255,.04)}
+  .btn svg{width:17px;height:17px}
+  .nav .btn{margin-left:6px}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding:76px 0 58px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:.8rem;font-weight:650;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--green2);
+  }
+  .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--green2);box-shadow:0 0 0 5px rgba(30,215,96,.10)}
+  h1{
+    font-size:clamp(2.5rem,5.4vw,4.4rem);
+    line-height:1.02;letter-spacing:-.045em;margin:18px 0 20px;font-weight:800;
+  }
+  h1 .grad{
+    background:linear-gradient(100deg,var(--green2),#7ef0a6 55%,#d8ffe5);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .lede{font-size:clamp(1.02rem,1.6vw,1.18rem);color:var(--muted);max-width:56ch;margin:0 0 28px}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
+  .chip{
+    font-size:.8rem;color:#c9d6ce;border:1px solid var(--line);background:rgba(255,255,255,.02);
+    padding:6px 11px;border-radius:999px;
+  }
+  .chip strong{color:var(--green2);font-weight:650}
+
+  /* phone mockup */
+  .phone-stage{display:flex;justify-content:center;position:relative}
+  .phone-stage::before{
+    content:"";position:absolute;inset:8% 12% 4% 12%;border-radius:50%;
+    background:radial-gradient(circle,rgba(29,185,84,.22),transparent 65%);filter:blur(26px);
+  }
+  .phone{
+    position:relative;width:282px;aspect-ratio:9/19.2;border-radius:42px;
+    background:linear-gradient(160deg,#26302a,#0a0d0b);
+    border:1px solid #34443a;
+    box-shadow:0 40px 90px rgba(0,0,0,.55), inset 0 0 0 7px #070a08;
+    padding:12px;
+    transform:rotate(-2.5deg);
+  }
+  .phone::before{
+    content:"";position:absolute;top:15px;left:50%;transform:translateX(-50%);
+    width:96px;height:22px;background:#070a08;border-radius:0 0 16px 16px;z-index:2;
+  }
+  .screen{
+    height:100%;border-radius:31px;overflow:hidden;
+    background:linear-gradient(180deg,#16221a 0%,#0d1310 55%,#0a0e0c 100%);
+    padding:34px 18px 18px;display:flex;flex-direction:column;
+  }
+  .statusbar{display:flex;justify-content:space-between;font-size:.63rem;color:#cfe0d5;letter-spacing:.02em}
+  .mini-head{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:.72rem;color:#b9c9bf}
+  .mini-head b{font-weight:700;color:#eaf4ee}
+  .cover{
+    margin:16px auto 14px;width:100%;aspect-ratio:1;border-radius:14px;
+    background:
+      radial-gradient(120% 120% at 20% 0%,rgba(126,240,166,.55),transparent 45%),
+      linear-gradient(145deg,#1db954,#0b6b34 55%,#08331c);
+    display:grid;place-items:center;
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+    position:relative;overflow:hidden;
+  }
+  .cover::after{
+    content:"";position:absolute;inset:0;
+    background:repeating-linear-gradient(115deg,transparent 0 18px,rgba(255,255,255,.045) 18px 19px);
+  }
+  .cover svg{width:62px;height:62px;color:rgba(4,20,10,.72);position:relative;z-index:1}
+  .now{font-size:.58rem;letter-spacing:.14em;color:var(--green2);font-weight:700;text-align:center}
+  .song{text-align:center;font-weight:750;font-size:1rem;margin-top:3px;letter-spacing:-.01em}
+  .artist{text-align:center;font-size:.72rem;color:#9fb0a6;margin-top:1px}
+  .bar{height:4px;border-radius:99px;background:#26342b;margin:15px 0 6px;overflow:hidden}
+  .bar span{display:block;width:37%;height:100%;background:var(--green2);border-radius:99px}
+  .times{display:flex;justify-content:space-between;font-size:.6rem;color:#8fa197}
+  .controls{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:12px}
+  .controls .play{width:46px;height:46px;border-radius:50%;background:var(--green2);display:grid;place-items:center}
+  .controls svg{width:18px;height:18px;color:#06160c}
+  .controls .side{color:#cfe0d5;opacity:.85}
+  .controls .side svg{color:#cfe0d5;width:20px;height:20px}
+  .queue-pill{
+    margin-top:auto;display:flex;align-items:center;gap:8px;justify-content:center;
+    border:1px solid #2a3a30;border-radius:999px;padding:7px 10px;font-size:.66rem;color:#b9c9bf;
+    background:rgba(255,255,255,.02);
+  }
+  .queue-pill svg{width:14px;height:14px;color:var(--green2)}
+
+  /* sections */
+  section{padding:72px 0}
+  .section-head{max-width:760px;margin-bottom:34px}
+  h2{font-size:clamp(1.7rem,3vw,2.4rem);letter-spacing:-.03em;line-height:1.1;margin:0 0 12px;font-weight:780}
+  .section-head p{margin:0;color:var(--muted);font-size:1.03rem}
+  .kicker{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--green2);font-weight:700;margin-bottom:10px}
+
+  /* flow */
+  .flow{
+    display:grid;grid-template-columns:1fr 34px 1fr 34px 1fr 34px 1fr;
+    align-items:stretch;gap:0;margin-top:8px;
+  }
+  .flow-card{
+    background:linear-gradient(180deg,var(--card),var(--bg2));
+    border:1px solid var(--line);border-radius:var(--radius);padding:20px 18px;min-height:154px;
+    position:relative;
+  }
+  .flow-card .ico{
+    width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+    background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.24);color:var(--green2);
+    margin-bottom:12px;
+  }
+  .flow-card .ico svg{width:20px;height:20px}
+  .flow-card h3{margin:0 0 4px;font-size:1rem;letter-spacing:-.01em}
+  .flow-card p{margin:0;font-size:.84rem;color:var(--muted);line-height:1.45}
+  .flow-card .tag{display:block;margin-top:10px;font-size:.72rem;color:#8fa197;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .arrow{display:grid;place-items:center;color:#4f6a5b;font-size:1.35rem;position:relative}
+  .arrow::before{content:"";position:absolute;top:50%;left:4px;right:4px;height:1px;background:linear-gradient(90deg,transparent,#2f4a3b,transparent)}
+  .arrow span{position:relative;background:var(--bg);padding:0 2px}
+
+  /* features */
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .feature{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px;
+    transition:border-color .18s ease, transform .18s ease;
+  }
+  .feature:hover{border-color:#355043;transform:translateY(-2px)}
+  .feature .ico{
+    width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+    background:rgba(29,185,84,.10);border:1px solid rgba(29,185,84,.22);color:var(--green2);margin-bottom:13px;
+  }
+  .feature .ico svg{width:19px;height:19px}
+  .feature h3{margin:0 0 6px;font-size:1rem}
+  .feature p{margin:0;color:var(--muted);font-size:.87rem}
+
+  /* deploy */
+  .deploy{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .deploy-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .deploy-head{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .deploy-head .pill{font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#06160c;background:var(--green2);border-radius:999px;padding:4px 9px}
+  .deploy-head b{font-size:.98rem}
+  .deploy-body{padding:18px 20px 20px}
+  .deploy-body p{margin:0 0 12px;color:var(--muted);font-size:.86rem}
+  pre{
+    margin:0;background:#090d0b;border:1px solid #1e2a23;border-radius:12px;padding:14px 15px;
+    overflow:auto;font-size:.79rem;line-height:1.55;color:#cfe3d7;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  pre .c{color:#7f9588}
+  pre .g{color:var(--green2)}
+  .deploy-link{display:inline-flex;gap:6px;align-items:center;margin-top:12px;font-size:.82rem;color:var(--green2);text-decoration:none;font-weight:650}
+  .deploy-link:hover{text-decoration:underline}
+
+  /* api */
+  .api-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:start}
+  table.api{width:100%;border-collapse:collapse;font-size:.86rem}
+  table.api th,table.api td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.api th{color:#8fa197;font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.08em}
+  table.api td code{font-size:.8rem;color:#d9efe1;background:rgba(255,255,255,.04);padding:1px 5px;border-radius:5px}
+  .note{
+    border-left:2px solid var(--green);background:rgba(29,185,84,.06);
+    padding:14px 16px;border-radius:0 10px 10px 0;color:#c5d7cb;font-size:.88rem;margin-top:18px;
+  }
+
+  /* privacy strip */
+  .strip{
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:space-between;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    padding:24px 0;color:var(--muted);font-size:.92rem;
+  }
+  .strip b{color:var(--text)}
+  .strip .tags{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* footer */
+  footer{padding:40px 0 54px;border-top:1px solid var(--line);color:#8fa197;font-size:.84rem}
+  .foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  .foot a{color:#b9c9bf;text-decoration:none}
+  .foot a:hover{color:var(--text)}
+  .foot-links{display:flex;gap:18px;flex-wrap:wrap}
+
+  @media (max-width: 980px){
+    .hero{grid-template-columns:1fr;gap:38px;padding-top:52px}
+    .phone-stage{order:2}
+    .nav-links{display:none}
+    .flow{grid-template-columns:1fr 1fr;gap:12px}
+    .arrow{display:none}
+    .grid-3{grid-template-columns:1fr 1fr}
+    .deploy{grid-template-columns:1fr}
+    .api-wrap{grid-template-columns:1fr}
+  }
+  @media (max-width: 640px){
+    .wrap{padding:0 18px}
+    .hero{padding-top:40px}
+    .flow{grid-template-columns:1fr}
+    .grid-3{grid-template-columns:1fr}
+    .phone{width:250px}
+    .nav{gap:12px}
+    .brand span{display:none}
+    section{padding:54px 0}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .btn,.feature{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="Espotifai, inicio">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#1db954"/><path d="M26 18l22 14-22 14z" fill="#0b0f0d"/></svg>
+      <span>Espotifai</span>
+    </a>
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#instancia">Instancias</a>
+      <a href="#funciones">Funciones</a>
+      <a href="#despliegue">Despliegue</a>
+      <a href="#api">API</a>
+    </nav>
+    <a class="btn btn-ghost" href="https://github.com/iwanttobefreak/espotifai" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M6 8.5v7M18 8.5c0 4-6 3-6 7" stroke-linecap="round"/></svg>
+      Repositorio
+    </a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div>
+      <div class="eyebrow"><span class="dot"></span> Autoalojado · código disponible</div>
+      <h1>Tu música,<br><span class="grad">en tu casa.</span></h1>
+      <p class="lede">
+        Espotifai escanea tu biblioteca y la sirve desde tu casa. Escúchala en el navegador
+        o en la app Android, con cola, listas y descarga de álbumes en ZIP. Sin nube ni suscripción.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#instancia">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+          Cómo montar la tuya
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/iwanttobefreak/espotifai" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M6 8.5v7M18 8.5c0 4-6 3-6 7" stroke-linecap="round"/></svg>
+          Ver el repositorio
+        </a>
+      </div>
+      <div class="chips">
+        <span class="chip"><strong>Sin nube</strong> · tu biblioteca, tu disco</span>
+        <span class="chip"><strong>Sin cuotas</strong> · sin suscripción</span>
+        <span class="chip"><strong>Web + Android</strong> · cola, listas y ZIP</span>
+      </div>
+    </div>
+
+    <div class="phone-stage">
+      <div class="phone" role="img" aria-label="Maqueta de la app: reproductor con carátula, controles y cola">
+        <div class="screen">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="mini-head"><b>Espotifai</b><span>⋯</span></div>
+          <div class="cover">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 18V5l10-2v11.5a2.5 2.5 0 1 1-1.5-2.3V7L10.5 8.3V18a2.5 2.5 0 1 1-1.5-2.3z"/></svg>
+          </div>
+          <div class="now">AHORA SUENA</div>
+          <div class="song">Canción de ejemplo</div>
+          <div class="artist">Artista · Álbum</div>
+          <div class="bar"><span></span></div>
+          <div class="times"><span>1:23</span><span>3:45</span></div>
+          <div class="controls">
+            <span class="side"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></span>
+            <span class="play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5l12 7-12 7z"/></svg></span>
+            <span class="side"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></span>
+          </div>
+          <div class="queue-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7M17 15v5m0 0l2-2m-2 2l-2-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Cola · 12 canciones
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="como-funciona">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Cómo funciona</div>
+        <h2>De la carpeta al altavoz, en cuatro pasos.</h2>
+        <p>No hay base de datos ni servicios externos. Solo un proceso Node.js, tus ficheros y un proxy si lo necesitas.</p>
+      </div>
+
+      <div class="flow">
+        <div class="flow-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-linejoin="round"/></svg></div>
+          <h3>Biblioteca</h3>
+          <p>Tu carpeta con <code>ARTISTA/ÁLBUM/</code>. El servidor solo lee: nunca escribe en la música.</p>
+          <span class="tag">MUSIC_DIR (ro)</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><span>→</span></div>
+        <div class="flow-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01" stroke-linecap="round"/></svg></div>
+          <h3>Servidor</h3>
+          <p>Escanea etiquetas y carátulas, construye el índice y sirve JSON y audio con <code>Range</code>.</p>
+          <span class="tag">Node.js · :8088</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><span>→</span></div>
+        <div class="flow-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" stroke-linejoin="round"/><path d="M9.5 12l1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>nginx + TLS</h3>
+          <p>HTTPS, app web y API. Opcional: también puedes exponer el servidor directo en la LAN.</p>
+          <span class="tag">:443 · reverse proxy</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><span>→</span></div>
+        <div class="flow-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="3"/><path d="M11 18h2" stroke-linecap="round"/></svg></div>
+          <h3>App web y Android</h3>
+          <p>La misma biblioteca en el navegador o en el móvil, con cola, listas y descarga ZIP de álbumes.</p>
+          <span class="tag">JS · Kotlin · Media3</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="instancia">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Instancias</div>
+        <h2>Cada casa, su propia puerta.</h2>
+        <p>Espotifai no guarda tu música en la nube. El frontal es la portada del proyecto; tu música vive en tu instancia, en tu casa.</p>
+      </div>
+      <div class="deploy">
+        <div class="deploy-card">
+          <div class="deploy-head"><span class="pill">1</span><b>Elige tu nombre</b></div>
+          <div class="deploy-body">
+            <p>Crea un CNAME de tu subdominio a tu DDNS (o a la IP de tu casa). Si tu IP es dinámica, apunta al DDNS.</p>
+            <pre>micasa.espotifai.es.  CNAME  tu-ddns.example.com.</pre>
+            <p style="margin-top:12px">Ejemplo: <code>micasa.espotifai.es</code> → <code>tu-ddns.example.com</code>.</p>
+          </div>
+        </div>
+        <div class="deploy-card">
+          <div class="deploy-head"><span class="pill">2</span><b>Despliega y emite TLS</b></div>
+          <div class="deploy-body">
+            <p>Clona el repo, configura el dominio y el token, y levanta el compose con nginx.</p>
+            <pre>git clone https://github.com/iwanttobefreak/espotifai.git
+cd espotifai/examples/con-nginx
+cp .env.example .env
+nano .env
+nano nginx.conf   <span class="c"># micasa.espotifai.es</span>
+docker compose up -d --build</pre>
+            <p style="margin-top:12px">Después, emite el certificado con certbot (el README lo detalla).</p>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <b>Qué es cada cosa:</b> <code>espotifai.es</code> es el frontal (proyecto, documentación y git).
+        <code>micasa.espotifai.es</code> es tu instancia (app web y API). El frontal no proxya tu música.
+      </div>
+      <div class="deploy" style="margin-top:16px">
+        <div class="deploy-card">
+          <div class="deploy-head"><span class="pill">Ejemplo</span><b>Así se vería</b></div>
+          <div class="deploy-body">
+            <p>Tu instancia serviría la app web y la API en <code>micasa.espotifai.es</code> (ejemplo genérico).</p>
+            <div class="hero-actions" style="margin-top:8px">
+              <a class="btn btn-ghost" href="https://github.com/iwanttobefreak/espotifai/blob/main/android/README.md" target="_blank" rel="noopener">Compilar Android</a>
+            </div>
+          </div>
+        </div>
+        <div class="deploy-card">
+          <div class="deploy-head"><span class="pill">Git</span><b>El código</b></div>
+          <div class="deploy-body">
+            <p>Servidor Node.js, app Android, app web, ejemplos de Docker Compose y documentación.</p>
+            <div class="hero-actions" style="margin-top:8px">
+              <a class="btn btn-ghost" href="https://github.com/iwanttobefreak/espotifai" target="_blank" rel="noopener">Navegar por el repo</a>
+              <a class="btn btn-ghost" href="https://github.com/iwanttobefreak/espotifai.git" target="_blank" rel="noopener">git clone</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="funciones">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Funciones</div>
+        <h2>Lo justo para escuchar bien.</h2>
+        <p>Sin redes sociales, sin recomendaciones y sin funciones que no usas.</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 12a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-6h4M4 17v-5h4v6H6a2 2 0 0 1-2-2z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Streaming con seek</h3>
+          <p>Servido con <code>Range</code>: puedes moverte por la canción sin descargarla entera.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><circle cx="18" cy="16" r="3"/><path d="M21 16v-5l-3 1" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Cola y listas</h3>
+          <p>Añade a la cola, reproduce a continuación y crea varias listas con tus canciones.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Offline de verdad</h3>
+          <p>Descarga canciones o álbumes al teléfono y escúchalos sin red, desde el fichero local.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6M17 14a5 5 0 0 1 4 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Multiusuario</h3>
+          <p>Un token por persona o dispositivo. El admin crea, cambia y revoca sin tocar el resto.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M8 7v10M16 7v10M4 12h16" stroke-linecap="round"/></svg></div>
+          <h3>Índice persistente</h3>
+          <p>El escaneo se guarda en <code>data/index.json</code>: arranca rápido y reescanea cuando quieras.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V7z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Sin telemetría</h3>
+          <p>No hay analítica ni servicios externos. El único envío opcional es el log de fallos.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 8h18M8 21h8" stroke-linecap="round"/></svg></div>
+          <h3>App web</h3>
+          <p>La misma biblioteca en el navegador, sin instalar nada: búsqueda, cola y listas.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>ZIP por álbum</h3>
+          <p>Descarga el álbum entero en un ZIP generado por el servidor. En la web no hay caché offline.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="despliegue">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">Despliegue</div>
+        <h2>Docker, con o sin nginx.</h2>
+        <p>Dos ejemplos listos para copiar. El token y la carpeta de música van en <code>.env</code>; nada sensible en el repo. El frontal es estático: esto despliega una <b>instancia</b>.</p>
+      </div>
+      <div class="deploy">
+        <div class="deploy-card">
+          <div class="deploy-head"><span class="pill">Sin nginx</span><b>Lo más simple</b></div>
+          <div class="deploy-body">
+            <p>Servidor directo en el puerto 8088. Ideal para la LAN; la app web no va incluida (solo la API).</p>
+<pre><span class="c"># clona y configura</span>
+git clone https://github.com/iwanttobefreak/espotifai.git
+cd espotifai/examples/sin-nginx
+cp .env.example .env
+nano .env   <span class="c"># API_TOKEN y MUSIC_DIR</span>
+
+<span class="c"># arranca</span>
+docker compose up -d --build
+
+<span class="c"># comprueba</span>
+curl http://localhost:8088/api/health</pre>
+            <a class="deploy-link" href="https://github.com/iwanttobefreak/espotifai" target="_blank" rel="noopener">Ver en el repositorio <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+        <div class="deploy-card">
+          <div class="deploy-head"><span class="pill">Con nginx</span><b>HTTPS + app web + API</b></div>
+          <div class="deploy-body">
+            <p>nginx termina TLS, sirve la app web en <code>/</code> y proxya la API en <code>/api/</code>. Certbot renueva solo.</p>
+<pre><span class="c"># configura el dominio en nginx.conf</span>
+cd espotifai/examples/con-nginx
+cp .env.example .env
+nano .env
+nano nginx.conf   <span class="c"># micasa.espotifai.es</span>
+
+docker compose up -d --build
+
+<span class="c"># certificado (una vez)</span>
+docker compose run --rm --entrypoint certbot certbot \
+  certonly --webroot -w /var/www/certbot \
+  -d micasa.espotifai.es --email tu@email.com \
+  --agree-tos --no-eff-email</pre>
+            <a class="deploy-link" href="https://github.com/iwanttobefreak/espotifai/tree/main/examples/con-nginx" target="_blank" rel="noopener">Ver compose + nginx en el repo <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <b>Consejo:</b> en producción cambia <code>API_TOKEN</code> antes de arrancar y usa HTTPS fuera de la LAN.
+        Si ya tienes un proxy central, no publiques los puertos 80/443: apunta a <code>espotifai:8088</code>.
+        El CNAME debe existir antes de pedir el certificado.
+      </div>
+    </div>
+  </section>
+
+  <section id="api">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="kicker">API</div>
+        <h2>Una API pequeña y predecible.</h2>
+        <p>Cada instancia tiene su propia API. JSON para la biblioteca, audio con rangos, tokens y ZIP de álbumes.</p>
+      </div>
+      <div class="api-wrap">
+        <div>
+          <table class="api">
+            <thead><tr><th>Método</th><th>Ruta</th><th>Qué hace</th></tr></thead>
+            <tbody>
+              <tr><td><code>GET</code></td><td><code>/api/health</code></td><td>Estado y nº de pistas</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/library</code></td><td>Artistas → álbumes → pistas</td></tr>
+              <tr><td><code>POST</code></td><td><code>/api/rescan</code></td><td>Reindexa la carpeta</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/stream/:id</code></td><td>Audio con <code>Range</code></td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/cover/:id</code></td><td>Carátula del álbum</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/album/:id/zip</code></td><td>Descarga el álbum en ZIP</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/users</code></td><td>Usuarios (solo admin)</td></tr>
+              <tr><td><code>POST</code></td><td><code>/api/users</code></td><td>Crea usuario + token</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+<pre><span class="c"># biblioteca</span>
+curl -H <span class="g">"Authorization: Bearer $TOKEN"</span> \
+  https://micasa.espotifai.es/api/library
+
+<span class="c"># stream con seek</span>
+curl -H <span class="g">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="g">"Range: bytes=0-1023"</span> \
+  https://micasa.espotifai.es/api/stream/&lt;id&gt;
+
+<span class="c"># crear un token para el salón</span>
+curl -X POST -H <span class="g">"Authorization: Bearer $ADMIN"</span> \
+  -H <span class="g">"Content-Type: application/json"</span> \
+  -d <span class="g">'{"name":"salon"}'</span> \
+  https://micasa.espotifai.es/api/users</pre>
+          <a class="deploy-link" href="https://github.com/iwanttobefreak/espotifai/blob/main/docs/API.md" target="_blank" rel="noopener">Documentación en el repo <span aria-hidden="true">↗</span></a>
+          <div class="hint" style="margin-top:10px">La descarga de un álbum es un ZIP que genera el servidor. La web no guarda audio para escuchar sin conexión.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="strip">
+      <div><b>Tu biblioteca no sale de casa.</b> Sin cuentas, sin anuncios y sin CDN.</div>
+      <div class="tags">
+        <span class="chip">Docker</span>
+        <span class="chip">Node.js</span>
+        <span class="chip">Kotlin + Compose</span>
+        <span class="chip">Media3</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap foot">
+      <div>Espotifai · servidor de música autoalojado · <a href="https://github.com/iwanttobefreak/espotifai" target="_blank" rel="noopener">código en el repositorio</a></div>
+      <div class="foot-links">
+        <a href="https://github.com/iwanttobefreak/espotifai/blob/main/android/README.md" target="_blank" rel="noopener">Android</a>
+        <a href="https://github.com/iwanttobefreak/espotifai/blob/main/docs/ARQUITECTURA.md" target="_blank" rel="noopener">Arquitectura</a>
+        <a href="https://github.com/iwanttobefreak/espotifai/blob/main/docs/DESPLIEGUE.md" target="_blank" rel="noopener">Despliegue</a>
+        <a href="https://github.com/iwanttobefreak/espotifai" target="_blank" rel="noopener">Repositorio</a>
+      </div>
+    </div>
+  </footer>
+</main>
+</body>
+</html>
