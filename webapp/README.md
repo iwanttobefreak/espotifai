@@ -6,6 +6,7 @@ Reproductor web de una instancia de Espotifai. Es un **único `index.html`** con
 
 - Biblioteca por artista/álbum, búsqueda sin acentos y reproductor con seek.
 - Cola de reproducción y listas (guardadas en `localStorage`).
+- **Artistas y álbumes completos**: desde su menú ⋮ se añaden todas sus pistas a la cola o a una lista.
 - **Descargar álbum**: pide `GET /api/album/:id/zip` y el navegador guarda el ZIP. **No hay modo offline**: no se guarda audio en el navegador.
 - Ajustes para cambiar servidor y token; el token se guarda solo en este navegador.
 

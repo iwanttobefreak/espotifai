@@ -30,7 +30,7 @@ flowchart LR
 | **Servidor** | Escanea, indexa (`data/index.json`), sirve `/api/library`, `/api/stream/:id`, `/api/cover/:id` y gestiona usuarios. |
 | **nginx** | Termina TLS, sirve `/apk/` y hace de reverse proxy. Opcional: el servidor también puede exponerse directo. |
 | **App web** | `webapp/index.html`: biblioteca, búsqueda, reproductor, cola, listas y ZIP por álbum. |
-| **App Android** | Biblioteca, búsqueda, reproductor, descargas, cola y listas. Guarda una caché local para funcionar sin red. |
+| **App Android** | Biblioteca, búsqueda, reproductor, descargas, cola y listas. Menús de artista/álbum, Home y cola visible en el reproductor. Caché local para funcionar sin red. |
 | **Frontal** | `web/index.html`: portada del proyecto, documentación y enlace al repo. |
 
 El detalle está en [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
@@ -172,6 +172,7 @@ El `<id>` es la ruta relativa del fichero codificada en **base64url**. Detalle y
 `webapp/index.html` es la app web de la instancia. Es un único fichero estático, sin build ni dependencias:
 
 - Biblioteca, búsqueda, reproductor con seek, cola y listas.
+- **Artistas y álbumes completos** se pueden añadir a la cola o a una lista desde su menú ⋮.
 - Pide el **token de la API** la primera vez y lo guarda en `localStorage`.
 - **Descargar álbum**: `GET /api/album/:id/zip`. El servidor genera el ZIP; la web **no guarda audio para escuchar sin conexión**.
 - Se sirve en `/` y usa `/api/` del mismo origen; el proxy de nginx está en `examples/con-nginx/espotifai-locations.conf`.
@@ -215,6 +216,8 @@ El repo **no** incluye keystore ni contraseñas. Para firmar tu APK, copia [`and
 - Reproductor con carátula, seek y controles.
 - **Cola**: añadir a la cola, reproducir a continuación, saltar, quitar y vaciar.
 - **Listas**: crear varias, renombrar, eliminar, añadir canciones y reproducirlas.
+- **Artista/álbum**: añadir todas sus pistas a la cola o a una lista desde el menú ⋮.
+- **Inicio**: barra con Online / Listas de reproducción / Cola de reproducción siempre visibles, icono de Home y cola visible en el reproductor.
 - **Descargas**: canción o álbum al teléfono (MediaStore/SAF); se reproducen sin red.
 - **Modo offline**: si el servidor no responde, muestra solo lo descargado.
 

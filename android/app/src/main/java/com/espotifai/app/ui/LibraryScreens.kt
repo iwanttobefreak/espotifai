@@ -2,6 +2,8 @@ package com.espotifai.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
@@ -28,8 +31,7 @@ import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -74,7 +76,8 @@ fun ArtistsScreen(
     onBack: (() -> Unit)? = null,
     onSettings: () -> Unit = {},
     onPlaylists: () -> Unit = {},
-    onQueue: () -> Unit = {}
+    onQueue: () -> Unit = {},
+    onHome: () -> Unit = {}
 ) {
     val library by vm.library.collectAsState()
     val loading by vm.loading.collectAsState()
@@ -84,37 +87,30 @@ fun ArtistsScreen(
     val cola by vm.queue.collectAsState()
 
     var consulta by rememberSaveable { mutableStateOf("") }
+    var artistOptions by remember { mutableStateOf<Artist?>(null) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Artistas") },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Atras") }
-                    }
-                },
-                actions = {
-                    ConnectionStatusIndicator(vm)
-                    IconButton(onClick = onPlaylists) {
-                        Icon(Icons.Default.QueueMusic, "Listas de reproducción")
-                    }
-                    IconButton(onClick = onQueue) {
-                        BadgedBox(
-                            badge = {
-                                if (cola.isNotEmpty()) Badge { Text("${cola.size}") }
-                            }
-                        ) {
-                            Icon(Icons.Default.PlaylistPlay, "Cola de reproducción")
+            Column {
+                TopAppBar(
+                    title = { Text("Artistas") },
+                    navigationIcon = {
+                        if (onBack != null) {
+                            IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Atras") }
+                        } else {
+                            IconButton(onClick = onHome) { Icon(Icons.Default.Home, "Inicio") }
                         }
-                    }
-                    IconButton(onClick = { vm.refresh() }) { Icon(Icons.Default.Refresh, "Recargar") }
-                    IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "Configuracion") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    },
+                    actions = {
+                        IconButton(onClick = { vm.refresh() }) { Icon(Icons.Default.Refresh, "Recargar") }
+                        IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "Configuracion") }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
                 )
-            )
+                HomeQuickActions(vm, onPlaylists, onQueue, cola.size)
+            }
         }
     ) { padding ->
         when {
@@ -155,7 +151,7 @@ fun ArtistsScreen(
                     if (consulta.isBlank()) {
                         LazyColumn(Modifier.fillMaxSize()) {
                             items(library!!.library) { artist ->
-                                ArtistRow(artist) { onArtistClick(artist.id) }
+                                ArtistRow(artist, onClick = { onArtistClick(artist.id) }, onOptions = { artistOptions = artist })
                                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
                             }
                         }
@@ -166,6 +162,52 @@ fun ArtistsScreen(
                 }
             }
         }
+    }
+
+    artistOptions?.let { a ->
+        MediaOptionsSheet(
+            vm = vm,
+            title = a.name,
+            subtitle = "${a.albums.size} álbumes · ${a.albums.sumOf { it.tracks.size }} pistas",
+            tracks = a.albums.flatMap { it.tracks },
+            onDismiss = { artistOptions = null }
+        )
+    }
+}
+
+/** Acciones siempre visibles en la pantalla de inicio. */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun HomeQuickActions(
+    vm: MusicViewModel,
+    onPlaylists: () -> Unit,
+    onQueue: () -> Unit,
+    colaCount: Int
+) {
+    FlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        ConnectionStatusIndicator(vm)
+        AssistChip(
+            onClick = onPlaylists,
+            label = { Text("Listas de reproducción") },
+            leadingIcon = {
+                Icon(Icons.Default.QueueMusic, contentDescription = null, modifier = Modifier.size(18.dp))
+            }
+        )
+        AssistChip(
+            onClick = onQueue,
+            label = {
+                Text(if (colaCount > 0) "Cola de reproducción ($colaCount)" else "Cola de reproducción")
+            },
+            leadingIcon = {
+                Icon(Icons.Default.PlaylistPlay, contentDescription = null, modifier = Modifier.size(18.dp))
+            }
+        )
     }
 }
 
@@ -227,6 +269,8 @@ private fun ListaResultados(
     onAlbumClick: (String) -> Unit
 ) {
     var opciones by remember { mutableStateOf<Track?>(null) }
+    var artistOptions by remember { mutableStateOf<Artist?>(null) }
+    var albumOptions by remember { mutableStateOf<AlbumHit?>(null) }
     if (resultados.vacio) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Sin resultados", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -237,14 +281,14 @@ private fun ListaResultados(
         if (resultados.artistas.isNotEmpty()) {
             item { SeccionTitulo("Artistas", resultados.artistas.size) }
             items(resultados.artistas) { artist ->
-                ArtistRow(artist) { onArtistClick(artist.id) }
+                ArtistRow(artist, onClick = { onArtistClick(artist.id) }, onOptions = { artistOptions = artist })
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
             }
         }
         if (resultados.albumes.isNotEmpty()) {
             item { SeccionTitulo("Álbumes", resultados.albumes.size) }
             items(resultados.albumes) { hit ->
-                AlbumRow(vm, hit.album) { onAlbumClick(hit.album.id) }
+                AlbumRow(vm, hit.album, onClick = { onAlbumClick(hit.album.id) }, onOptions = { albumOptions = hit })
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
             }
         }
@@ -264,6 +308,24 @@ private fun ListaResultados(
     opciones?.let { t ->
         TrackOptionsSheet(vm = vm, track = t, onDismiss = { opciones = null })
     }
+    artistOptions?.let { a ->
+        MediaOptionsSheet(
+            vm = vm,
+            title = a.name,
+            subtitle = "${a.albums.size} álbumes · ${a.albums.sumOf { it.tracks.size }} pistas",
+            tracks = a.albums.flatMap { it.tracks },
+            onDismiss = { artistOptions = null }
+        )
+    }
+    albumOptions?.let { hit ->
+        MediaOptionsSheet(
+            vm = vm,
+            title = hit.album.name,
+            subtitle = "${hit.artistName} · ${hit.album.tracks.size} pistas",
+            tracks = hit.album.tracks,
+            onDismiss = { albumOptions = null }
+        )
+    }
 }
 
 @Composable
@@ -281,7 +343,11 @@ private fun SeccionTitulo(texto: String, count: Int) {
 }
 
 @Composable
-private fun ArtistRow(artist: Artist, onClick: () -> Unit) {
+private fun ArtistRow(
+    artist: Artist,
+    onClick: () -> Unit,
+    onOptions: (() -> Unit)? = null
+) {
     val trackCount = artist.albums.sumOf { it.tracks.size }
     Row(
         modifier = Modifier
@@ -302,7 +368,7 @@ private fun ArtistRow(artist: Artist, onClick: () -> Unit) {
             )
         }
         Spacer(Modifier.width(16.dp))
-        Column {
+        Column(Modifier.weight(1f)) {
             Text(artist.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(
                 "${artist.albums.size} albumes · $trackCount pistas",
@@ -310,20 +376,35 @@ private fun ArtistRow(artist: Artist, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+        if (onOptions != null) {
+            IconButton(onClick = onOptions) {
+                Icon(Icons.Default.MoreVert, "Opciones del artista")
+            }
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlbumsScreen(vm: MusicViewModel, artistId: String, onAlbumClick: (String) -> Unit, onBack: () -> Unit) {
+fun AlbumsScreen(
+    vm: MusicViewModel,
+    artistId: String,
+    onAlbumClick: (String) -> Unit,
+    onBack: () -> Unit,
+    onHome: () -> Unit = {}
+) {
     val artist = vm.artistById(artistId)
     val snackbarHostState = remember { SnackbarHostState() }
+    var albumOptions by remember { mutableStateOf<Album?>(null) }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(artist?.name ?: "") },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Atras") }
+                },
+                actions = {
+                    IconButton(onClick = onHome) { Icon(Icons.Default.Home, "Inicio") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -339,17 +420,31 @@ fun AlbumsScreen(vm: MusicViewModel, artistId: String, onAlbumClick: (String) ->
         } else {
             LazyColumn(Modifier.fillMaxSize().padding(padding)) {
                 items(artist.albums) { album ->
-                    AlbumRow(vm, album) { onAlbumClick(album.id) }
+                    AlbumRow(
+                        vm = vm,
+                        album = album,
+                        onClick = { onAlbumClick(album.id) },
+                        onOptions = { albumOptions = album }
+                    )
                     HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
                 }
             }
         }
     }
     DownloadMessageHost(vm, snackbarHostState)
+    albumOptions?.let { al ->
+        MediaOptionsSheet(
+            vm = vm,
+            title = al.name,
+            subtitle = "${artist?.name ?: ""} · ${al.tracks.size} pistas",
+            tracks = al.tracks,
+            onDismiss = { albumOptions = null }
+        )
+    }
 }
 
 @Composable
-private fun AlbumRow(vm: MusicViewModel, album: Album, onClick: () -> Unit) {
+private fun AlbumRow(vm: MusicViewModel, album: Album, onClick: () -> Unit, onOptions: (() -> Unit)? = null) {
     val downloaded by vm.downloaded.collectAsState()
     val progreso by vm.albumProgress.collectAsState()
     val pedirPermiso = rememberStoragePermission { vm.setAlbumDownload(album, true) }
@@ -372,6 +467,11 @@ private fun AlbumRow(vm: MusicViewModel, album: Album, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+        if (onOptions != null) {
+            IconButton(onClick = onOptions) {
+                Icon(Icons.Default.MoreVert, "Opciones del álbum")
+            }
+        }
         if (bajando != null) {
             CircularProgressIndicator(
                 modifier = Modifier.size(22.dp),
@@ -392,16 +492,25 @@ private fun AlbumRow(vm: MusicViewModel, album: Album, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TracksScreen(vm: MusicViewModel, albumId: String, onBack: () -> Unit) {
+fun TracksScreen(vm: MusicViewModel, albumId: String, onBack: () -> Unit, onHome: () -> Unit = {}) {
     val album = vm.albumById(albumId)
     val snackbarHostState = remember { SnackbarHostState() }
     var opciones by remember { mutableStateOf<Track?>(null) }
+    var albumMenu by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(album?.name ?: "", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Atras") }
+                },
+                actions = {
+                    if (album != null && album.tracks.isNotEmpty()) {
+                        IconButton(onClick = { albumMenu = true }) {
+                            Icon(Icons.Default.MoreVert, "Opciones del álbum")
+                        }
+                    }
+                    IconButton(onClick = onHome) { Icon(Icons.Default.Home, "Inicio") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -458,6 +567,15 @@ fun TracksScreen(vm: MusicViewModel, albumId: String, onBack: () -> Unit) {
     DownloadMessageHost(vm, snackbarHostState)
     opciones?.let { t ->
         TrackOptionsSheet(vm = vm, track = t, onDismiss = { opciones = null })
+    }
+    if (albumMenu && album != null) {
+        MediaOptionsSheet(
+            vm = vm,
+            title = album.name,
+            subtitle = "${album.tracks.firstOrNull()?.artist ?: ""} · ${album.tracks.size} pistas",
+            tracks = album.tracks,
+            onDismiss = { albumMenu = false }
+        )
     }
 }
 

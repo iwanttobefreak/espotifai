@@ -20,8 +20,8 @@ android {
         applicationId = "com.espotifai.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 13
-        versionName = "1.11"
+        versionCode = 14
+        versionName = "1.12"
 
         // Direcciones por defecto, configurables al compilar:
         //   ./gradlew assembleRelease -Pespotifai.urlCasa=http://... -Pespotifai.urlFuera=https://...

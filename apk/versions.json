@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.15",
+    "versionCode": 17,
+    "file": "espotifai-v17-1.15.apk",
+    "sha256": "e3fdb0ae54b85000aeabc0a97c0224d1f328d22c68f8cd004778a1381baf54da",
+    "size": 15202003,
+    "date": "2026-10-23T16:52:03+02:00"
+  },
+  {
     "version": "1.14",
     "versionCode": 16,
     "file": "espotifai-v16-1.14.apk",

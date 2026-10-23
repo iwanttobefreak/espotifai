@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
@@ -65,7 +66,8 @@ import com.espotifai.app.ui.theme.EspotifaiGreen
 fun PlaylistsScreen(
     vm: MusicViewModel,
     onPlaylistClick: (String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onHome: () -> Unit = {}
 ) {
     val playlists by vm.playlists.collectAsState()
     var crear by rememberSaveable { mutableStateOf(false) }
@@ -79,6 +81,7 @@ fun PlaylistsScreen(
                 },
                 actions = {
                     IconButton(onClick = { crear = true }) { Icon(Icons.Default.Add, "Nueva lista") }
+                    IconButton(onClick = onHome) { Icon(Icons.Default.Home, "Inicio") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -196,7 +199,8 @@ private fun PlaylistRow(vm: MusicViewModel, playlist: Playlist, onClick: () -> U
 fun PlaylistDetailScreen(
     vm: MusicViewModel,
     playlistId: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onHome: () -> Unit = {}
 ) {
     val playlists by vm.playlists.collectAsState()
     val playlist = playlists.firstOrNull { it.id == playlistId }
@@ -236,6 +240,7 @@ fun PlaylistDetailScreen(
                             )
                         }
                     }
+                    IconButton(onClick = onHome) { Icon(Icons.Default.Home, "Inicio") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -461,7 +466,7 @@ private fun RenombrarListaDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QueueScreen(vm: MusicViewModel, onBack: () -> Unit) {
+fun QueueScreen(vm: MusicViewModel, onBack: () -> Unit, onHome: () -> Unit = {}) {
     val queue by vm.queue.collectAsState()
     val queueIndex by vm.queueIndex.collectAsState()
     val current by vm.currentTrack.collectAsState()
@@ -492,6 +497,7 @@ fun QueueScreen(vm: MusicViewModel, onBack: () -> Unit) {
                             Icon(Icons.Default.Delete, "Vaciar cola")
                         }
                     }
+                    IconButton(onClick = onHome) { Icon(Icons.Default.Home, "Inicio") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background

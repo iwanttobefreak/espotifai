@@ -637,21 +637,45 @@ class MusicViewModel(app: Application) : AndroidViewModel(app) {
      * Crea una lista. Si se pasa [track], la cancion entra ya en ella.
      * Devuelve el id o null si el nombre esta vacio.
      */
-    fun createPlaylist(name: String, track: Track? = null): String? {
+    fun createPlaylist(name: String, tracks: List<Track> = emptyList()): String? {
         val limpio = name.trim()
         if (limpio.isEmpty()) return null
+        val unicas = tracks.distinctBy { it.id }
         val lista = Playlist(
             id = UUID.randomUUID().toString(),
             name = limpio,
-            tracks = if (track != null) listOf(track) else emptyList(),
+            tracks = unicas,
             created = System.currentTimeMillis()
         )
         guardarPlaylists(_playlists.value + lista)
         toast(
-            if (track != null) "«${track.title}» añadida a «$limpio»"
-            else "Lista «$limpio» creada"
+            if (unicas.isEmpty()) "Lista «$limpio» creada"
+            else "${unicas.size} canciones añadidas a «$limpio»"
         )
         return lista.id
+    }
+
+    fun createPlaylist(name: String, track: Track): String? = createPlaylist(name, listOf(track))
+
+    /** Anade varias canciones a una lista. No duplica. Devuelve cuantas entraron. */
+    fun addAllToPlaylist(playlistId: String, tracks: List<Track>): Int {
+        val lista = playlistById(playlistId) ?: return 0
+        val existentes = lista.tracks.map { it.id }.toMutableSet()
+        val nuevas = tracks.filter { existentes.add(it.id) }
+        if (nuevas.isEmpty()) {
+            toast("Ya están en «${lista.name}»")
+            return 0
+        }
+        guardarPlaylists(
+            _playlists.value.map {
+                if (it.id == playlistId) it.copy(tracks = it.tracks + nuevas) else it
+            }
+        )
+        toast(
+            if (nuevas.size == 1) "«${nuevas.first().title}» añadida a «${lista.name}»"
+            else "${nuevas.size} canciones añadidas a «${lista.name}»"
+        )
+        return nuevas.size
     }
 
     fun renamePlaylist(id: String, name: String) {
@@ -667,21 +691,9 @@ class MusicViewModel(app: Application) : AndroidViewModel(app) {
         toast("Lista «${lista.name}» eliminada")
     }
 
-    /** Añade una cancion a la lista. No duplica. */
-    fun addToPlaylist(playlistId: String, track: Track): Boolean {
-        val lista = playlistById(playlistId) ?: return false
-        if (lista.tracks.any { it.id == track.id }) {
-            toast("«${track.title}» ya está en «${lista.name}»")
-            return false
-        }
-        guardarPlaylists(
-            _playlists.value.map {
-                if (it.id == playlistId) it.copy(tracks = it.tracks + track) else it
-            }
-        )
-        toast("«${track.title}» añadida a «${lista.name}»")
-        return true
-    }
+    /** Anade una cancion a la lista. No duplica. */
+    fun addToPlaylist(playlistId: String, track: Track): Boolean =
+        addAllToPlaylist(playlistId, listOf(track)) > 0
 
     fun removeFromPlaylist(playlistId: String, trackId: String) {
         guardarPlaylists(

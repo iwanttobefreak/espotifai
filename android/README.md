@@ -68,6 +68,8 @@ Sin `keystore.properties`, `assembleRelease` genera un APK sin firmar (útil par
 - Reproductor con carátula, seek, play/pause y salto.
 - Cola: añadir, reproducir a continuación, saltar, quitar y vaciar.
 - Listas: crear varias, renombrar, eliminar, añadir canciones y reproducir.
+- Artistas y álbumes completos: añadir todas sus pistas a la cola o a una lista desde ⋮.
+- Inicio: Home, Online/Listas/Cola siempre visibles y cola en el reproductor.
 - Descargas al teléfono (MediaStore o carpeta SAF), reproducción offline.
 - Caché de la última biblioteca para abrir sin conexión.
 - Semáforo de conexión y fallback entre LAN y dominio público.

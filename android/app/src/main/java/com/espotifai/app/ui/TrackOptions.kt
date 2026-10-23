@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlaylistAdd
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material3.AlertDialog
@@ -48,11 +49,14 @@ import com.espotifai.app.ui.theme.EspotifaiGreen
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrackOptionsSheet(
+fun MediaOptionsSheet(
     vm: MusicViewModel,
-    track: Track,
+    title: String,
+    subtitle: String,
+    tracks: List<Track>,
     onDismiss: () -> Unit
 ) {
+    if (tracks.isEmpty()) return
     val playlists by vm.playlists.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var nuevaLista by remember { mutableStateOf(false) }
@@ -65,7 +69,7 @@ fun TrackOptionsSheet(
                 .padding(bottom = 24.dp)
         ) {
             Text(
-                track.title,
+                title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -73,22 +77,26 @@ fun TrackOptionsSheet(
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Text(
-                "${track.artist} · ${track.album}",
+                subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 2.dp)
             )
             Spacer(Modifier.height(12.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
 
+            Opcion("Reproducir", Icons.Default.PlayArrow) {
+                vm.play(tracks.first(), tracks)
+                onDismiss()
+            }
             Opcion("Añadir a la cola", Icons.Default.QueueMusic) {
-                vm.enqueue(listOf(track))
+                vm.enqueue(tracks)
                 onDismiss()
             }
             Opcion("Reproducir a continuación", Icons.Default.PlaylistPlay) {
-                vm.enqueueNext(listOf(track))
+                vm.enqueueNext(tracks)
                 onDismiss()
             }
 
@@ -109,11 +117,11 @@ fun TrackOptionsSheet(
                 )
             } else {
                 playlists.forEach { lista ->
-                    val contiene = lista.tracks.any { it.id == track.id }
+                    val contiene = tracks.all { t -> lista.tracks.any { it.id == t.id } }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { vm.addToPlaylist(lista.id, track) }
+                            .clickable { vm.addAllToPlaylist(lista.id, tracks) }
                             .padding(horizontal = 24.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -147,12 +155,24 @@ fun TrackOptionsSheet(
         NuevaListaDialog(
             onDismiss = { nuevaLista = false },
             onCrear = { nombre ->
-                vm.createPlaylist(nombre, track)
+                vm.createPlaylist(nombre, tracks)
                 nuevaLista = false
                 onDismiss()
             }
         )
     }
+}
+
+/** Menu de opciones para una sola cancion. */
+@Composable
+fun TrackOptionsSheet(vm: MusicViewModel, track: Track, onDismiss: () -> Unit) {
+    MediaOptionsSheet(
+        vm = vm,
+        title = track.title,
+        subtitle = "${track.artist} · ${track.album}",
+        tracks = listOf(track),
+        onDismiss = onDismiss
+    )
 }
 
 @Composable

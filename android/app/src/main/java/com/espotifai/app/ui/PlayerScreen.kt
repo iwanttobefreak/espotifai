@@ -1,6 +1,8 @@
 package com.espotifai.app.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PlaylistPlay
@@ -22,6 +26,7 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,12 +52,13 @@ import com.espotifai.app.ui.theme.EspotifaiGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayerScreen(vm: MusicViewModel, onBack: () -> Unit, onQueue: () -> Unit = {}) {
+fun PlayerScreen(vm: MusicViewModel, onBack: () -> Unit, onQueue: () -> Unit = {}, onHome: () -> Unit = {}) {
     val track = vm.currentTrack.collectAsState().value
     val isPlaying by vm.isPlaying.collectAsState()
     val position by vm.positionMs.collectAsState()
     val duration by vm.durationMs.collectAsState()
     val cola by vm.queue.collectAsState()
+    val queueIndex by vm.queueIndex.collectAsState()
 
     var dragging by remember { mutableStateOf(false) }
     var slider by remember { mutableStateOf(0f) }
@@ -67,6 +74,7 @@ fun PlayerScreen(vm: MusicViewModel, onBack: () -> Unit, onQueue: () -> Unit = {
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Atras") }
                 },
                 actions = {
+                    IconButton(onClick = onHome) { Icon(Icons.Default.Home, "Inicio") }
                     IconButton(onClick = onQueue) {
                         BadgedBox(
                             badge = {
@@ -87,9 +95,10 @@ fun PlayerScreen(vm: MusicViewModel, onBack: () -> Unit, onQueue: () -> Unit = {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
             if (track == null) {
                 Text("Selecciona una cancion", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -154,6 +163,82 @@ fun PlayerScreen(vm: MusicViewModel, onBack: () -> Unit, onQueue: () -> Unit = {
                     Icon(Icons.Default.SkipNext, "Siguiente", Modifier.size(40.dp))
                 }
             }
+
+            if (cola.isNotEmpty()) {
+                Spacer(Modifier.height(24.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Cola de reproducción (${cola.size})",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(4.dp))
+                cola.forEachIndexed { index, t ->
+                    PlayerQueueRow(
+                        track = t,
+                        posicion = index + 1,
+                        esActual = index == queueIndex && track?.id == t.id,
+                        sonando = index == queueIndex && track?.id == t.id && isPlaying,
+                        onPlay = { vm.playQueueAt(index) },
+                        onRemove = { vm.removeFromQueue(index) }
+                    )
+                    if (index != cola.lastIndex) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerQueueRow(
+    track: com.espotifai.app.data.Track,
+    posicion: Int,
+    esActual: Boolean,
+    sonando: Boolean,
+    onPlay: () -> Unit,
+    onRemove: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onPlay)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            if (esActual) "▶" else posicion.toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (esActual) EspotifaiGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(32.dp)
+        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                track.title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (esActual) FontWeight.Bold else FontWeight.Normal,
+                color = if (esActual) EspotifaiGreen else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                if (sonando) "Sonando · ${track.artist}" else track.artist,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (sonando) EspotifaiGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Text(
+            formatDuration(track.duration),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        IconButton(onClick = onRemove) {
+            Icon(Icons.Default.Close, "Quitar de la cola")
         }
     }
 }

@@ -77,6 +77,12 @@ private fun App(vm: MusicViewModel) {
     val route = backStack?.destination?.route
     val currentTrack by vm.currentTrack.collectAsState()
     val showMiniPlayer = route != "player" && currentTrack != null
+    val goHome: () -> Unit = {
+        navController.navigate("artists") {
+            popUpTo("artists") { inclusive = false }
+            launchSingleTop = true
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -97,7 +103,8 @@ private fun App(vm: MusicViewModel) {
                     onAlbumClick = { albumId -> navController.navigate("tracks/$albumId") },
                     onSettings = { vm.openSettings() },
                     onPlaylists = { navController.navigate("playlists") },
-                    onQueue = { navController.navigate("queue") }
+                    onQueue = { navController.navigate("queue") },
+                    onHome = goHome
                 )
             }
             composable("albums/{artistId}") { entry ->
@@ -106,7 +113,8 @@ private fun App(vm: MusicViewModel) {
                     vm = vm,
                     artistId = id,
                     onAlbumClick = { albumId -> navController.navigate("tracks/$albumId") },
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onHome = goHome
                 )
             }
             composable("tracks/{albumId}") { entry ->
@@ -114,21 +122,24 @@ private fun App(vm: MusicViewModel) {
                 TracksScreen(
                     vm = vm,
                     albumId = id,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onHome = goHome
                 )
             }
             composable("player") {
                 PlayerScreen(
                     vm = vm,
                     onBack = { navController.popBackStack() },
-                    onQueue = { navController.navigate("queue") }
+                    onQueue = { navController.navigate("queue") },
+                    onHome = goHome
                 )
             }
             composable("playlists") {
                 PlaylistsScreen(
                     vm = vm,
                     onPlaylistClick = { id -> navController.navigate("playlist/$id") },
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onHome = goHome
                 )
             }
             composable("playlist/{playlistId}") { entry ->
@@ -136,11 +147,12 @@ private fun App(vm: MusicViewModel) {
                 PlaylistDetailScreen(
                     vm = vm,
                     playlistId = id,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onHome = goHome
                 )
             }
             composable("queue") {
-                QueueScreen(vm = vm, onBack = { navController.popBackStack() })
+                QueueScreen(vm = vm, onBack = { navController.popBackStack() }, onHome = goHome)
             }
         }
     }

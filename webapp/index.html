@@ -123,9 +123,15 @@
   /* grids */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(154px,1fr));gap:14px}
   .card{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px;
+    position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px;
     cursor:pointer;transition:background .14s ease,border-color .14s ease,transform .14s ease;min-width:0;
   }
+  .card-menu{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:rgba(0,0,0,.62);color:#fff;backdrop-filter:blur(4px)}
+  .card-menu:hover{background:rgba(0,0,0,.82);color:#fff}
+  .card-menu svg{width:16px;height:16px}
+  .artist .icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--muted2);flex:none}
+  .artist .icon:hover{background:rgba(255,255,255,.07);color:var(--text)}
+  .artist .icon svg{width:16px;height:16px}
   .card:hover{background:var(--card2);border-color:#33483c;transform:translateY(-2px)}
   .cover-wrap{
     position:relative;width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;
@@ -439,6 +445,7 @@
       <div id="menu-cover"><div class="cover-wrap"><span class="cover-note">♪</span></div></div>
       <div><div class="now-title" id="menu-title">Canción</div><div class="now-artist" id="menu-artist"></div></div>
     </div>
+    <button class="menu-item" data-action="menu-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5l12 7-12 7z"/></svg> Reproducir</button>
     <button class="menu-item" data-action="menu-queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M18 14v6m0 0l2-2m-2 2l-2-2" stroke-linecap="round" stroke-linejoin="round"/></svg> Añadir a la cola</button>
     <button class="menu-item" data-action="menu-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round"/><path d="M16 12l4 3-4 3z" fill="currentColor"/></svg> Reproducir a continuación</button>
     <div class="menu-sep"></div>
@@ -512,7 +519,7 @@
     loading: false,
     error: null,
     queueOpen: false,
-    menuTrack: null,
+    menu: null,
     pm: null,
     seeking: false
   };
@@ -709,6 +716,7 @@
         '<div class="avatar">' + esc(initials(a.name)) + '</div>' +
         '<div class="artist-main"><div class="artist-name">' + esc(a.name) + '</div>' +
         '<div class="artist-sub">' + (a.albums || []).length + ' álbumes · ' + nTracks + ' pistas</div></div>' +
+        '<button class="icon" data-action="artist-menu" data-id="' + esc(a.id) + '" title="Añadir a cola o lista">' + ICON.more + '</button>' +
         '<span class="chev">›</span></div>';
     }
     return '<div class="page-head"><div><h1>Biblioteca</h1><p>' + state.artists.length + ' artistas · ' + state.totalTracks + ' pistas</p></div></div>' +
@@ -723,10 +731,12 @@
       cards += '<div class="card" data-action="open-album" data-id="' + esc(al.id) + '">' +
         coverHtml(al.cover, al.name) +
         '<div class="card-title">' + esc(al.name) + '</div>' +
-        '<div class="card-sub">' + (al.tracks || []).length + ' pistas</div></div>';
+        '<div class="card-sub">' + (al.tracks || []).length + ' pistas</div>' +
+        '<button class="icon card-menu" data-action="album-menu" data-id="' + esc(al.id) + '" title="Añadir a cola o lista">' + ICON.more + '</button></div>';
     }
     return '<div class="crumbs"><button data-action="home">Biblioteca</button><span class="sep">/</span><span>' + esc(artist.name) + '</span></div>' +
-      '<div class="page-head"><div><h1>' + esc(artist.name) + '</h1><p>' + (artist.albums || []).length + ' álbumes</p></div></div>' +
+      '<div class="page-head"><div><h1>' + esc(artist.name) + '</h1><p>' + (artist.albums || []).length + ' álbumes</p></div>' +
+      '<button class="btn btn-ghost" data-action="artist-menu" data-id="' + esc(artist.id) + '">' + ICON.more + ' Añadir artista</button></div>' +
       '<div class="grid">' + cards + '</div>';
   }
 
@@ -747,6 +757,7 @@
       '<div class="album-actions">' +
       '<button class="btn btn-primary" data-action="play-album" data-id="' + esc(al.id) + '">' + ICON.play + ' Reproducir</button>' +
       '<button class="btn btn-ghost" data-action="shuffle-album" data-id="' + esc(al.id) + '">' + ICON.shuffle + ' Aleatorio</button>' +
+      '<button class="btn btn-ghost" data-action="album-menu" data-id="' + esc(al.id) + '">' + ICON.more + ' Añadir álbum</button>' +
       '<button class="btn btn-ghost" data-action="download-album" data-id="' + esc(al.id) + '">' + ICON.download + ' Descargar ZIP</button>' +
       '</div><div class="hint">La descarga genera un ZIP del álbum en el servidor; no se guarda para escuchar sin conexión en la web.</div></div></div>' +
       '<div class="tracks">' + rows + '</div>';
@@ -788,7 +799,7 @@
     if (artists.length) {
       html += '<div class="kicker" style="color:var(--green);font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin:18px 0 10px">Artistas · ' + artists.length + '</div><div class="artist-list">';
       for (const a of artists.slice(0, LIMIT)) {
-        html += '<div class="artist" data-action="open-artist" data-id="' + esc(a.id) + '"><div class="avatar">' + esc(initials(a.name)) + '</div><div class="artist-main"><div class="artist-name">' + esc(a.name) + '</div><div class="artist-sub">' + (a.albums || []).length + ' álbumes</div></div><span class="chev">›</span></div>';
+        html += '<div class="artist" data-action="open-artist" data-id="' + esc(a.id) + '"><div class="avatar">' + esc(initials(a.name)) + '</div><div class="artist-main"><div class="artist-name">' + esc(a.name) + '</div><div class="artist-sub">' + (a.albums || []).length + ' álbumes</div></div><button class="icon" data-action="artist-menu" data-id="' + esc(a.id) + '" title="Añadir a cola o lista">' + ICON.more + '</button><span class="chev">›</span></div>';
       }
       html += '</div>';
     }
@@ -796,7 +807,8 @@
       html += '<div class="kicker" style="color:var(--green);font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin:22px 0 10px">Álbumes · ' + albums.length + '</div><div class="grid">';
       for (const x of albums.slice(0, LIMIT)) {
         html += '<div class="card" data-action="open-album" data-id="' + esc(x.album.id) + '">' + coverHtml(x.album.cover, x.album.name) +
-          '<div class="card-title">' + esc(x.album.name) + '</div><div class="card-sub">' + esc(x.artist.name) + '</div></div>';
+          '<div class="card-title">' + esc(x.album.name) + '</div><div class="card-sub">' + esc(x.artist.name) + '</div>' +
+          '<button class="icon card-menu" data-action="album-menu" data-id="' + esc(x.album.id) + '" title="Añadir a cola o lista">' + ICON.more + '</button></div>';
       }
       html += '</div>';
     }
@@ -952,19 +964,27 @@
     }
     if (audio.paused) audio.play().catch(() => {}); else audio.pause();
   }
-  function queueTrack(track) {
-    if (!track) return;
-    state.queue.push(track);
+  function queueTracks(tracks) {
+    const list = (tracks || []).filter(Boolean);
+    if (!list.length) return;
+    state.queue.push(...list);
     if (!state.current) state.index = 0;
-    toast('«' + track.title + '» añadida a la cola');
+    toast(list.length === 1 ? '«' + list[0].title + '» añadida a la cola' : list.length + ' canciones añadidas a la cola');
     renderQueue();
   }
-  function queueNext(track) {
-    if (!track) return;
+  function queueTrack(track) { queueTracks([track]); }
+  function queueNext(tracks) {
+    const list = Array.isArray(tracks) ? tracks.filter(Boolean) : (tracks ? [tracks] : []);
+    if (!list.length) return;
     const pos = state.current ? state.index + 1 : state.queue.length;
-    state.queue.splice(Math.max(0, pos), 0, track);
-    toast('«' + track.title + '» se reproducirá a continuación');
+    state.queue.splice(Math.max(0, pos), 0, ...list);
+    toast(list.length === 1 ? '«' + list[0].title + '» se reproducirá a continuación' : list.length + ' canciones se reproducirán a continuación');
     renderQueue();
+  }
+  function playTracks(tracks) {
+    const list = (tracks || []).filter(Boolean);
+    if (!list.length) return;
+    playTrack(list[0], list, 0);
   }
   function downloadAlbum(albumId) {
     const item = albumById(albumId);
@@ -1001,15 +1021,23 @@
   }
 
   /* ---------------- listas ---------------- */
-  function addToPlaylist(id, track) {
+  function addManyToPlaylist(id, tracks) {
     const p = state.playlists.find((x) => x.id === id);
-    if (!p) return;
-    if ((p.tracks || []).some((t) => t.id === track.id)) { toast('«' + track.title + '» ya está en «' + p.name + '»'); return; }
-    p.tracks.push(track);
+    if (!p) return 0;
+    const list = (tracks || []).filter(Boolean);
+    const existentes = new Set((p.tracks || []).map((t) => t.id));
+    const nuevas = [];
+    for (const t of list) {
+      if (!existentes.has(t.id)) { existentes.add(t.id); nuevas.push(t); }
+    }
+    if (!nuevas.length) { toast('Ya están en «' + p.name + '»'); return 0; }
+    p.tracks.push(...nuevas);
     savePlaylists();
-    toast('«' + track.title + '» añadida a «' + p.name + '»');
+    toast(nuevas.length === 1 ? '«' + nuevas[0].title + '» añadida a «' + p.name + '»' : nuevas.length + ' canciones añadidas a «' + p.name + '»');
     render();
+    return nuevas.length;
   }
+  function addToPlaylist(id, track) { return addManyToPlaylist(id, [track]); }
   function removeFromPlaylist(listId, trackId) {
     const p = state.playlists.find((x) => x.id === listId);
     if (!p) return;
@@ -1019,7 +1047,7 @@
   }
   function openPm(mode, opts) {
     opts = opts || {};
-    state.pm = { mode, id: opts.id || null, track: opts.track || null };
+    state.pm = { mode, id: opts.id || null, tracks: opts.tracks || (opts.track ? [opts.track] : []) };
     const title = mode === 'new' ? 'Nueva lista' : mode === 'rename' ? 'Renombrar lista' : 'Eliminar lista';
     $('#pm-title').textContent = title;
     $('#pm-desc').textContent = mode === 'delete' ? 'Se quitará la lista de este navegador. Las canciones no se borran.' :
@@ -1040,7 +1068,7 @@
   }
   function savePm() {
     if (!state.pm) return;
-    const { mode, id, track } = state.pm;
+    const { mode, id, tracks } = state.pm;
     if (mode === 'delete') {
       state.playlists = state.playlists.filter((p) => p.id !== id);
       savePlaylists();
@@ -1053,13 +1081,17 @@
     const name = $('#pm-name').value.trim();
     if (!name) { $('#pm-err').textContent = 'Escribe un nombre.'; return; }
     if (mode === 'new') {
-      const p = { id: uid(), name, tracks: track ? [track] : [] };
+      const list = (tracks || []).filter(Boolean);
+      const unicas = [];
+      const seen = new Set();
+      for (const t of list) { if (!seen.has(t.id)) { seen.add(t.id); unicas.push(t); } }
+      const p = { id: uid(), name, tracks: unicas };
       state.playlists.push(p);
       savePlaylists();
       closePm();
       toast('Lista «' + name + '» creada');
       openPlaylist(p.id);
-      if (track) toast('«' + track.title + '» añadida a «' + name + '»');
+      if (unicas.length) toast(unicas.length + ' canciones añadidas a «' + name + '»');
     } else if (mode === 'rename') {
       const p = state.playlists.find((x) => x.id === id);
       if (p) { p.name = name; savePlaylists(); }
@@ -1068,21 +1100,53 @@
       render();
     }
   }
-  function openMenu(track) {
-    if (!track) return;
-    state.menuTrack = track;
-    $('#menu-title').textContent = track.title;
-    $('#menu-artist').textContent = [track.artist, track.album].filter(Boolean).join(' · ');
-    $('#menu-cover').innerHTML = coverHtml(coverForTrack(track), track.title);
+  function openMenuFor(kind, id) {
+    let title = '', subtitle = '', tracks = [], cover = null;
+    if (kind === 'track') {
+      const x = trackById(id);
+      if (!x) return;
+      title = x.track.title;
+      subtitle = [x.track.artist, x.track.album].filter(Boolean).join(' · ');
+      tracks = [x.track];
+      cover = coverForTrack(x.track);
+    } else if (kind === 'album') {
+      const x = albumById(id);
+      if (!x) return;
+      title = x.album.name;
+      subtitle = x.artist.name + ' · ' + (x.album.tracks || []).length + ' pistas';
+      tracks = (x.album.tracks || []).slice();
+      cover = x.album.cover;
+    } else if (kind === 'artist') {
+      const a = state.artists.find((x) => x.id === id);
+      if (!a) return;
+      const n = (a.albums || []).reduce((sum, al) => sum + (al.tracks || []).length, 0);
+      title = a.name;
+      subtitle = (a.albums || []).length + ' álbumes · ' + n + ' pistas';
+      tracks = (a.albums || []).flatMap((al) => al.tracks || []);
+      const conCover = (a.albums || []).find((al) => al.cover);
+      cover = conCover ? conCover.cover : null;
+    } else {
+      return;
+    }
+    if (!tracks.length) { toast('No hay canciones'); return; }
+    state.menu = { kind, id, title, subtitle, tracks };
+    $('#menu-title').textContent = title;
+    $('#menu-artist').textContent = subtitle;
+    $('#menu-cover').innerHTML = coverHtml(cover, title);
     const box = $('#menu-playlists');
     box.innerHTML = state.playlists.length
-      ? state.playlists.map((p) => '<button class="menu-item" data-action="menu-add-playlist" data-id="' + esc(p.id) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10" stroke-linecap="round"/><path d="M18 15v6M15 18h6" stroke-linecap="round"/></svg> ' + esc(p.name) + '<span class="count">' + p.tracks.length + '</span></button>').join('')
+      ? state.playlists.map((p) => {
+          const contiene = tracks.every((t) => (p.tracks || []).some((x) => x.id === t.id));
+          return '<button class="menu-item" data-action="menu-add-playlist" data-id="' + esc(p.id) + '">' +
+            (contiene ? ICON.check : ICON.list) + ' ' + esc(p.name) +
+            '<span class="count">' + (p.tracks || []).length + '</span></button>';
+        }).join('')
       : '<div class="hint" style="padding:6px 9px">Aún no tienes listas.</div>';
     $('#menu').classList.add('open');
     document.body.classList.add('modal-open');
   }
   function closeMenu() {
-    state.menuTrack = null;
+    state.menu = null;
     $('#menu').classList.remove('open');
     document.body.classList.remove('modal-open');
   }
@@ -1176,7 +1240,9 @@
       case 'playlists': openPlaylists(); break;
       case 'play-track': { const x = trackById(id); if (x) playTrack(x.track, x.album ? x.album.tracks : [x.track], x.index); break; }
       case 'queue-track': { const x = trackById(id); if (x) queueTrack(x.track); break; }
-      case 'track-menu': { const x = trackById(id); if (x) openMenu(x.track); break; }
+      case 'track-menu': openMenuFor('track', id); break;
+      case 'album-menu': openMenuFor('album', id); break;
+      case 'artist-menu': openMenuFor('artist', id); break;
       case 'play-album': playAlbum(id, false); break;
       case 'shuffle-album': playAlbum(id, true); break;
       case 'download-album': downloadAlbum(id); break;
@@ -1193,10 +1259,11 @@
       case 'auth-save': saveAuth(); break;
       case 'close-auth': closeAuth(); break;
       case 'clear-search': state.query = ''; $('#search').value = ''; $('#search-clear').classList.remove('show'); renderMain(); break;
-      case 'menu-queue': if (state.menuTrack) queueTrack(state.menuTrack); closeMenu(); break;
-      case 'menu-next': if (state.menuTrack) queueNext(state.menuTrack); closeMenu(); break;
-      case 'menu-add-playlist': if (state.menuTrack) { addToPlaylist(id, state.menuTrack); closeMenu(); } break;
-      case 'menu-new-playlist': { const t = state.menuTrack; closeMenu(); openPm('new', { track: t }); break; }
+      case 'menu-play': if (state.menu) playTracks(state.menu.tracks); closeMenu(); break;
+      case 'menu-queue': if (state.menu) queueTracks(state.menu.tracks); closeMenu(); break;
+      case 'menu-next': if (state.menu) queueNext(state.menu.tracks); closeMenu(); break;
+      case 'menu-add-playlist': if (state.menu) { addManyToPlaylist(id, state.menu.tracks); closeMenu(); } break;
+      case 'menu-new-playlist': { const list = state.menu ? state.menu.tracks : []; closeMenu(); openPm('new', { tracks: list }); break; }
       case 'close-menu': closeMenu(); break;
       case 'new-playlist': openPm('new', {}); break;
       case 'rename-playlist': openPm('rename', { id }); break;
