@@ -1,0 +1,106 @@
+[
+  {
+    "version": "1.14",
+    "versionCode": 16,
+    "file": "espotifai-v16-1.14.apk",
+    "sha256": "8db64ecf187c0a97e78d38a87744722a13f4d4d999273c905d090f7880074cca",
+    "size": 15185619,
+    "date": "2026-10-23T15:55:37+02:00"
+  },
+  {
+    "version": "1.13",
+    "versionCode": 15,
+    "file": "espotifai-v15-1.13.apk",
+    "sha256": "a8247551c519eea6660b5ad86cebd72917f5ffb56d554c4a01cc78657fdd5c25",
+    "size": 15185619,
+    "date": "2026-10-23T15:55:37+02:00"
+  },
+  {
+    "version": "1.12",
+    "versionCode": 14,
+    "file": "espotifai-v14-1.12.apk",
+    "sha256": "743d40152861d7f81e40ec44c60d3ae0de154f8b99d97fe739f9020a78b72fb9",
+    "size": 15185619,
+    "date": "2026-10-23T15:41:20+02:00"
+  },
+  {
+    "version": "1.11",
+    "versionCode": 13,
+    "file": "espotifai-v13-1.11.apk",
+    "sha256": "b34814345175df62b4e67ae1e8ef14b509b6a289c24152384640242638ff18b3",
+    "size": 15185619,
+    "date": "2026-10-23T15:21:31+02:00"
+  },
+  {
+    "version": "1.10",
+    "versionCode": 12,
+    "file": "espotifai-v12-1.10.apk",
+    "sha256": "7e82d6403b29a96761c7e4281a07fa5490e52c0ba8922dfa34f3a81f9226b653",
+    "size": 15136471,
+    "date": "2026-10-20T16:19:56+02:00"
+  },
+  {
+    "version": "1.9",
+    "versionCode": 11,
+    "file": "espotifai-v11-1.9.apk",
+    "sha256": "d2d464cf47c1ffa5ff4f2f4d326c80fa4ff76af81af26eae8b7714bdfbe737c7",
+    "size": 15119898,
+    "date": "2026-10-20T13:17:34+02:00"
+  },
+  {
+    "version": "1.8.1",
+    "versionCode": 10,
+    "file": "espotifai-v10-1.8.1.apk",
+    "sha256": "0c5b834e1a3e14cd5420855f303ee4d53cba5d9e572e500dd95771f73b9967fc",
+    "size": 15119902,
+    "date": "2026-10-17T17:24:40+02:00"
+  },
+  {
+    "version": "1.8",
+    "versionCode": 9,
+    "file": "espotifai-v9-1.8.apk",
+    "sha256": "025c22ce24b22cb61ef6f427af135dc390564ef96544b778a4d0341926b4f66e",
+    "size": 15119898,
+    "date": "2026-10-17T13:10:08+02:00"
+  },
+  {
+    "version": "1.6",
+    "versionCode": 7,
+    "file": "espotifai-v7-1.6.apk",
+    "sha256": "7a27474c3a2f8701534627546a9b0eb74bffa6fcad3fb25a220f250992c5b16f",
+    "size": 15103514,
+    "date": "2026-10-13T21:05:09+02:00"
+  },
+  {
+    "version": "1.5",
+    "versionCode": 6,
+    "file": "espotifai-v6-1.5.apk",
+    "sha256": "41a949fb6448f041dbe7a940ea1d36dc45ed756f9a00c39bb5b48699ccb6c532",
+    "size": 15103514,
+    "date": "2026-10-13T19:16:01+02:00"
+  },
+  {
+    "version": "1.4",
+    "versionCode": 5,
+    "file": "espotifai-v5-1.4.apk",
+    "sha256": "4e32242d2b2d0cd6ba75c504ee736cf6321208b3060e4eb6538f1d73a4f5b759",
+    "size": 15103490,
+    "date": "2026-10-13T18:43:08+02:00"
+  },
+  {
+    "version": "1.3",
+    "versionCode": 4,
+    "file": "espotifai-v4-1.3.apk",
+    "sha256": "c043208b5735bae7eb2a3bdcb8c46c40bdc6175c90a99627ba30659356257631",
+    "size": 15103494,
+    "date": "2026-10-08T23:58:00+02:00"
+  },
+  {
+    "version": "1.2",
+    "versionCode": 3,
+    "file": "espotifai-v3-1.2.apk",
+    "sha256": "7993dc3e27fc9104f8f02da59cf868c8cdf2a1d0a32ca515be647ef471e6f8fe",
+    "size": 15087058,
+    "date": "2026-10-08T20:28:18+02:00"
+  }
+]

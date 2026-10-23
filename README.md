@@ -222,6 +222,20 @@ Las listas y las descargas se guardan en el teléfono (`SharedPreferences`); no 
 
 ---
 
+## Publicar una versión de la app
+
+El APK no se guarda en este repo público. Al compilar una versión nueva:
+
+```bash
+APK_PUBLIC_DIR=/ruta/a/apk \
+  scripts/publicar-apk.sh app/build/outputs/apk/release/app-release.apk 1.14 16
+```
+
+- Copia el APK a `/apk/` de la instancia (`espotifai.apk` y la versión concreta).
+- Actualiza `apk/versions.json` (manifiesto público sin URLs personales).
+- Hace commit del manifiesto y crea el tag `v<version>`; intenta `git push`.
+- El binario queda en la instancia, no en el repo público, para no exponer datos del paquete/dispositivo.
+
 ## Estructura del repositorio
 
 ```
